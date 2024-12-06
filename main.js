@@ -109,7 +109,7 @@ function GameController (
                 diagSum += getActivePlayer().mark;
             }
 
-            if (row === (2 - column)) {
+            if (row === 2 - column) {
                 revDiagSum += getActivePlayer().mark;
             }
             checkWinner(row, column);
