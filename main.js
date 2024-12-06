@@ -48,15 +48,18 @@ function GameController (
     let colSum = [0, 0, 0];
     let diagSum = 0;
     let revDiagSum = 0;
+    let turnCount = 1;
 
     const players = [
         {
             name: playerOneName,
-            mark: 1
+            mark: 1,
+            score: 0
         },
         {
             name: playerTwoName,
-            mark: -1
+            mark: -1,
+            score: 0
         }
     ]
 
@@ -65,6 +68,7 @@ function GameController (
 
     const changeTurns = () => {
         activePlayer = activePlayer === players[0] ? players[1] : players[0];
+        turnCount++;
     };
     const getActivePlayer = () => activePlayer;
 
@@ -77,6 +81,11 @@ function GameController (
             winner = activePlayer;
         }
         return getWinner();
+    }
+
+    const changeName = (name1, name2) => {
+        players[0].name = name1;
+        players[1].name = name2;
     }
 
     const getWinner = () => winner; 
@@ -100,6 +109,9 @@ function GameController (
         } else if (getWinner()) {
             console.log (`The board is decided!`);
             return;
+        } else if (turnCount > 9) {
+            console.log(`Game is a Tie`);
+            return;
         } else {
             board.chooseCell(row, column, getActivePlayer().mark)
 
@@ -118,13 +130,18 @@ function GameController (
         }  
     }
 
-    return {playRound, getActivePlayer, getWinner, getBoard: board.getBoard};
+    return {playRound, getActivePlayer, getWinner, getBoard: board.getBoard, changeName};
 }
 
 function UIController () {
     const game = GameController();
     const PLAYER_TURN_DIV = document.querySelector(".turn");
     const BOARD_DIV = document.querySelector(".board");
+    const RESET_BUTTON = document.querySelector(".reset");
+    const CHANGE_NAME = document.querySelector(".change-name");
+    const NAME_1 = document.querySelectorAll(".nameplate");
+    
+    const getName = (index) => NAME_1[index].innerText;
 
     const updateScreen = () => {
         BOARD_DIV.textContent = "";
@@ -167,8 +184,16 @@ function UIController () {
         game.playRound(selectedRow, selectedColumn);
         updateScreen();
     }
-    BOARD_DIV.addEventListener("click", BoardEventHandler)
 
+    function ChangeNameEvent (e) {
+        game.changeName(getName(0), getName(1));
+        updateScreen();
+    }
+    
+    BOARD_DIV.addEventListener("click", BoardEventHandler)
+    CHANGE_NAME.addEventListener("click", ChangeNameEvent);
+    
+    game.changeName(getName(0), getName(1));
     updateScreen();
 }
 
