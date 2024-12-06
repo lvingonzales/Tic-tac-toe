@@ -2,9 +2,6 @@ function GameBoard () {
     const gridSize = 3;
     const board = [];
 
-    let validMove = false;
-    const checkIfValid = () => validMove;
-
     for (let i = 0; i < gridSize; i++) {
         board[i] = [];
         for (let j = 0; j < gridSize; j++) {
@@ -14,8 +11,15 @@ function GameBoard () {
 
     const getBoard = () => board;
 
+    const clearBoard = () => {
+        board.forEach (row => {
+            row.forEach((cell) => {
+                cell.resetValue();
+            })
+        })
+    }
+
     const chooseCell = (row, column, player) => {
-        validMove = false;
             board[row][column].stamp(player);
     }
 
@@ -24,7 +28,7 @@ function GameBoard () {
         console.log(boardWithCellValues);
     }
 
-    return {printBoard, chooseCell, checkIfValid, getBoard}
+    return {printBoard, chooseCell, getBoard, clearBoard}
 } 
 
 function Cell () {
@@ -35,8 +39,9 @@ function Cell () {
     }
 
     const getValue = () => value;
+    const resetValue = () => value = 0;
 
-    return {getValue, stamp};
+    return {getValue, stamp, resetValue};
 }
 
 function GameController (
@@ -65,6 +70,19 @@ function GameController (
 
     let activePlayer = players[0];
     let winner = null;
+
+    const resetGame = () => {
+        board.clearBoard();
+        players[0].score = 0;
+        players[1].score = 1;
+        turnCount = 1;
+        rowSum = [0, 0, 0];
+        colSum = [0, 0, 0];
+        diagSum = 0;
+        revDiagSum = 0;
+        activePlayer = players[0];
+        winner = null;
+    }
 
     const changeTurns = () => {
         activePlayer = activePlayer === players[0] ? players[1] : players[0];
@@ -130,7 +148,7 @@ function GameController (
         }  
     }
 
-    return {playRound, getActivePlayer, getWinner, getBoard: board.getBoard, changeName};
+    return {playRound, getActivePlayer, getWinner, getBoard: board.getBoard, changeName, resetGame};
 }
 
 function UIController () {
@@ -189,7 +207,13 @@ function UIController () {
         game.changeName(getName(0), getName(1));
         updateScreen();
     }
-    
+
+    function ResetGameEvent (e) {
+        game.resetGame();
+        updateScreen();
+    }
+
+    RESET_BUTTON.addEventListener("click", ResetGameEvent);
     BOARD_DIV.addEventListener("click", BoardEventHandler)
     CHANGE_NAME.addEventListener("click", ChangeNameEvent);
     
