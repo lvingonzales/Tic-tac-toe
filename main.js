@@ -108,8 +108,8 @@ function GameController (
             if (row === column) {
                 diagSum += getActivePlayer().mark;
             }
-
-            if (row === (3-1) - column) {
+            console.log (2-column)
+            if (row == 3-1-column) {
                 revDiagSum += getActivePlayer().mark;
             }
             checkWinner(row, column);
