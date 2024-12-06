@@ -23,12 +23,7 @@ function GameBoard () {
             board[row][column].stamp(player);
     }
 
-    const printBoard = () => {
-        const boardWithCellValues = board.map((row) => row.map((cell) => cell.getValue()));
-        console.log(boardWithCellValues);
-    }
-
-    return {printBoard, chooseCell, getBoard, clearBoard}
+    return {chooseCell, getBoard, clearBoard}
 } 
 
 function Cell () {
@@ -54,6 +49,7 @@ function GameController (
     let diagSum = 0;
     let revDiagSum = 0;
     let turnCount = 1;
+    let result;
 
     const players = [
         {
@@ -73,8 +69,6 @@ function GameController (
 
     const resetGame = () => {
         board.clearBoard();
-        players[0].score = 0;
-        players[1].score = 1;
         turnCount = 1;
         rowSum = [0, 0, 0];
         colSum = [0, 0, 0];
@@ -82,21 +76,26 @@ function GameController (
         revDiagSum = 0;
         activePlayer = players[0];
         winner = null;
+        result = "";
     }
 
     const changeTurns = () => {
         activePlayer = activePlayer === players[0] ? players[1] : players[0];
         turnCount++;
     };
+
     const getActivePlayer = () => activePlayer;
 
-    const printNewRound = () => {
-        board.printBoard();
-    }
+    const setResult = (text) => result = text;
+
+    const getResult = () => result;
+
+    const getPlayerScore = (index) => players[index].score;
 
     const checkWinner = (row, column) => {
         if (Math.abs(rowSum[row]) === 3 || Math.abs(colSum[column]) === 3 || Math.abs(diagSum) === 3 || Math.abs(revDiagSum) === 3) {
             winner = activePlayer;
+            winner.score ++;
         }
         return getWinner();
     }
@@ -108,27 +107,22 @@ function GameController (
 
     const getWinner = () => winner; 
 
-    printNewRound();
-
     const playRound = (row, column) => {
-            console.log (
-                `${getActivePlayer().name} chose to stamp cell ${row}, ${column}`
-            );
+        setResult (
+            `${getActivePlayer().name} chose to stamp cell ${row}, ${column}`
+        );
 
         if (row < 0 || column < 0 || row >= 3 || column >= 3) {
-            console.log (`Row ${row} and column ${column} is not within the board!`);
+            setResult (`Row ${row} and column ${column} is not within the board!`);
             return;
         } else if (board.getBoard()[row][column].getValue() !== 0){
-            console.log (`That space is already occupied`);
+            setResult (`That space is already occupied`);
             return;
         } else if (activePlayer.mark !== -1 && activePlayer.mark !== 1){
-            console.log (`Invalid Player`);
+            setResult (`Invalid Player`);
             return;
         } else if (getWinner()) {
-            console.log (`The board is decided!`);
-            return;
-        } else if (turnCount > 9) {
-            console.log(`Game is a Tie`);
+            setResult (`The board is decided!`);
             return;
         } else {
             board.chooseCell(row, column, getActivePlayer().mark)
@@ -139,16 +133,19 @@ function GameController (
                 diagSum += getActivePlayer().mark;
             }
 
-            if (row === 2 - column) {
+            if (row == 2 - column) {
                 revDiagSum += getActivePlayer().mark;
             }
             checkWinner(row, column);
-            changeTurns();
-            printNewRound();    
+            if (turnCount === 9 ){
+                setResult(`The Game is TIED`);
+            } else {
+                changeTurns();
+            }     
         }  
     }
 
-    return {playRound, getActivePlayer, getWinner, getBoard: board.getBoard, changeName, resetGame};
+    return {playRound, getActivePlayer, getWinner, getBoard: board.getBoard, changeName, resetGame, getPlayerScore, getResult};
 }
 
 function UIController () {
@@ -157,9 +154,13 @@ function UIController () {
     const BOARD_DIV = document.querySelector(".board");
     const RESET_BUTTON = document.querySelector(".reset");
     const CHANGE_NAME = document.querySelector(".change-name");
-    const NAME_1 = document.querySelectorAll(".nameplate");
+    const NAMES = document.querySelectorAll(".nameplate");
+    const SCORES = document.querySelectorAll(".score");
+    const RESULT = document.querySelector(".result");
     
-    const getName = (index) => NAME_1[index].innerText;
+    const setScore = (index) => SCORES[index].innerText = game.getPlayerScore(index);
+
+    const getName = (index) => NAMES[index].innerText;
 
     const updateScreen = () => {
         BOARD_DIV.textContent = "";
@@ -167,7 +168,11 @@ function UIController () {
         const board = game.getBoard();
         const activePlayer = game.getActivePlayer();
 
+        setScore(0);
+        setScore(1);
+
         PLAYER_TURN_DIV.textContent = `${activePlayer.name}'s turn...`;
+        RESULT.textContent = game.getResult();
 
         board.forEach(row => {
             row.forEach((cell, index) => {
@@ -219,6 +224,7 @@ function UIController () {
     
     game.changeName(getName(0), getName(1));
     updateScreen();
-}
+    return {updateScreen};
+} 
 
 UIController();
